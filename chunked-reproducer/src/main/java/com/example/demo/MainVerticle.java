@@ -1,8 +1,14 @@
 package com.example.demo;
 
 import io.vertx.core.AbstractVerticle;
+import io.vertx.core.Future;
 
 public class MainVerticle extends AbstractVerticle {
+    Future<Void> fillRedis() {
+        Future<Void> future = Future.future();
+
+        return future;
+    }
 
     @Override
     public void start() throws Exception {
