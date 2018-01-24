@@ -1,9 +1,7 @@
 package com.example.demo;
 
-import java.io.File;
 import java.net.HttpURLConnection;
 import java.util.Random;
-import java.util.UUID;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -22,8 +20,6 @@ import io.vertx.redis.RedisOptions;
 
 public class MainVerticle extends AbstractVerticle {
     private static final int KEY_COUNT = 10000;
-    private static final String HOST = "localhost";
-    private static final int PORT = 433;
     private static final int REDIS_DB = 10;
     private static final String KEY_PREFIX = "chunked:reproducer:";
     private RedisClient redis;
@@ -126,7 +122,7 @@ public class MainVerticle extends AbstractVerticle {
             return startWebServer;
         });
         start.setHandler(startFuture.completer());
-        System.out.println("HTTP server started on port " + PORT);
+        System.out.println("HTTP server started on port 8080");
     }
 
     private static Random random = new Random();
@@ -152,6 +148,13 @@ public class MainVerticle extends AbstractVerticle {
     }
 
     private String randomString() {
-        return UUID.randomUUID().toString().substring(random.nextInt(37));
+        StringBuilder sb = new StringBuilder();
+        String candidateChars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890";
+        int length = random.nextInt(50) + 1;
+        for (int i = 0; i < length; i++) {
+            sb.append(candidateChars.charAt(random.nextInt(candidateChars.length())));
+        }
+
+        return sb.toString();
     }
 }

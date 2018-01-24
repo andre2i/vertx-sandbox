@@ -14,7 +14,7 @@ The project will take over redis database `10`, flush it and fill it with random
 $ ./gradlew run
 
 Fillig Redis
-HTTP server started on port 433
+HTTP server started on port 8080
 ```
 
 ```
