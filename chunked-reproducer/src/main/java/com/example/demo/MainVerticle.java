@@ -90,12 +90,12 @@ public class MainVerticle extends AbstractVerticle {
         redis = RedisClient.create(vertx, new RedisOptions());
         ClassLoader classLoader = getClass().getClassLoader();
         String jksPath = classLoader.getResource("tls/server-keystore.jks").getFile();
-        HttpServerOptions serverOptions = new HttpServerOptions().setPort(PORT).setHost(HOST)
-                .setKeyCertOptions(new JksOptions().setPath(jksPath).setPassword("wibble")).setSsl(true);
+        HttpServerOptions serverOptions = new HttpServerOptions().setSsl(true)
+                .setKeyCertOptions(new JksOptions().setPath(jksPath).setPassword("wibble"));
 
         Future<Void> start = fillRedis().compose(v -> {
             Future<Void> startWebServer = Future.future();
-            vertx.createHttpServer().requestHandler(req -> {
+            vertx.createHttpServer(serverOptions).requestHandler(req -> {
                 System.out.println("Received a request");
 
                 HttpServerResponse response = req.response().setChunked(true);
