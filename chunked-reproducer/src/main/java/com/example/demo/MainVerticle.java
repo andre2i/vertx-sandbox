@@ -2,13 +2,9 @@ package com.example.demo;
 
 import java.net.HttpURLConnection;
 import java.util.Random;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import io.vertx.core.AbstractVerticle;
-import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
-import io.vertx.core.Handler;
 import io.vertx.core.http.HttpHeaders;
 import io.vertx.core.http.HttpServerOptions;
 import io.vertx.core.http.HttpServerResponse;
@@ -17,23 +13,6 @@ import io.vertx.core.net.JksOptions;
 
 public class MainVerticle extends AbstractVerticle {
     private static final int KEY_COUNT = 10000;
-
-    void getJsons(Handler<String> jsonHandler, Handler<Void> endHandler) {
-        AtomicInteger outstandingGetRequestCount = new AtomicInteger(KEY_COUNT);
-        for (int i = 0; i < KEY_COUNT; i++) {
-            json(ar -> {
-                int remainingGets = outstandingGetRequestCount.decrementAndGet();
-                if (ar.succeeded())
-                    jsonHandler.handle(ar.result());
-                if (remainingGets == 0)
-                    endHandler.handle(null);
-            });
-        }
-    }
-
-    void json(Handler<AsyncResult<String>> handler) {
-        handler.handle(Future.succeededFuture(makePayload()));
-    }
 
     @Override
     public void start(Future<Void> startFuture) throws Exception {
@@ -44,26 +23,18 @@ public class MainVerticle extends AbstractVerticle {
 
         vertx.createHttpServer(serverOptions).requestHandler(req -> {
             System.out.println("Received a request");
-
             HttpServerResponse response = req.response().setChunked(true);
-            AtomicBoolean fresh = new AtomicBoolean(true);
+
             response.write("[");
+            for (int i = 0; i < KEY_COUNT; i++) {
+                response.write(makePayload());
+                response.write(",");
+            }
+            response.write(makePayload());
+            response.write("]");
 
-            Handler<String> jsonHandler = json -> {
-                if (fresh.get())
-                    fresh.set(false);
-                else
-                    response.write(",");
-                response.write(json);
-            };
-
-            Handler<Void> endHandler = end -> {
-                response.write("]");
-                response.putHeader(HttpHeaders.CONTENT_TYPE, "application/json")
-                        .setStatusCode(HttpURLConnection.HTTP_OK).end();
-            };
-
-            getJsons(jsonHandler, endHandler);
+            response.putHeader(HttpHeaders.CONTENT_TYPE, "application/json").setStatusCode(HttpURLConnection.HTTP_OK)
+                    .end();
         }).exceptionHandler(exception -> {
             System.out.println("Server error >> " + exception);
         }).listen(8080);
@@ -81,7 +52,7 @@ public class MainVerticle extends AbstractVerticle {
         JsonObject root = randomJson();
         if (depth == 0)
             return root;
-        int width = random.nextInt(20) + 1;
+        int width = random.nextInt(3) + 1;
         for (int i = 1; i < width; i++) {
             root.put(randomString(), makePayload(depth - 1));
         }
